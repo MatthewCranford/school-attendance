@@ -1,11 +1,13 @@
-/* STUDENTS IGNORE THIS FUNCTION
- * All this does is create an initial
- * attendance record if one is not found
- * within localStorage.
- */
-(function() {
-    if (!localStorage.attendance) {
-        console.log('Creating attendance records...');
+const model = {
+
+    init: function() {
+        if (!localStorage.attendance) {
+            this.generateRandomData();
+        }
+        this.attendance = JSON.parse(localStorage.attendance);
+    },
+
+    generateRandomData: function() {
         function getRandom() {
             return (Math.random() >= 0.5);
         }
@@ -24,7 +26,17 @@
 
         localStorage.attendance = JSON.stringify(attendance);
     }
-}());
+}
+
+const octopus = {
+    
+    init: function() {
+        model.init();
+    }
+}
+octopus.init();
+
+
 
 
 /* STUDENT APPLICATION */
@@ -82,3 +94,4 @@ $(function() {
 
     countMissing();
 }());
+
