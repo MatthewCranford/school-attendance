@@ -28,10 +28,27 @@ const model = {
     }
 }
 
+const view = {
+    init: function() {
+        this.attendance = octopus.getAttendance();
+        this.$allMissed = $('tbody .missed-col'),
+        this.$allCheckboxes = $('tbody input');
+    }
+ 
+}
+
 const octopus = {
     
     init: function() {
         model.init();
+    },
+
+    getAttendance: function() {
+        return model.attendance;
+    },
+
+    countMissing: function() {
+
     }
 }
 octopus.init();
@@ -41,7 +58,7 @@ octopus.init();
 
 /* STUDENT APPLICATION */
 $(function() {
-    var attendance = JSON.parse(localStorage.attendance),
+    var attendance = octopus.getAttendance(),
         $allMissed = $('tbody .missed-col'),
         $allCheckboxes = $('tbody input');
 
