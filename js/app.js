@@ -3,72 +3,92 @@ const model = {
     init: function() {
 
         if (!localStorage.attendance) {
-            this.generateRandomData();
-        }
-
-        this.attendance = JSON.parse(localStorage.attendance);
-    },
-
-    generateRandomData: function() {
-
-        function getRandom() {
-            return (Math.random() >= 0.5);
-        }
-
-        const nameColumns = $('tbody .name-col');
-        const attendance = [];
-
-        nameColumns.each(function(index) {
-            const name = this.innerText;
-            attendance[index] = {};
-            attendance[index].name = name;
-            attendance[index].randArr = []
-
-            for (var i = 0; i <= 11; i++) {
-                attendance[index].randArr.push(getRandom());
+            this.attendance =  {
+                'Slappy the Frog': {
+                    name: 'Slappy the Frog',
+                    missed: 0,
+                    checkedBoxes: []
+                },
+                'Lilly the Lizard': {
+                    name: 'Lilly the Lizard',
+                    missed: 0,
+                    checkedBoxes: []
+                },
+                'Paulrus the Walrus': {
+                    name: 'Paulrus the Walrus',
+                    missed: 0,
+                    checkedBoxes: []
+                },
+                'Gregory the Goat': {
+                    name: 'Gregory the Goat',
+                    missed: 0,
+                    checkedBoxes: []
+                },
+                'Adam the Anaconda': {
+                    name: 'Adam the Anaconda',
+                    missed: 0,
+                    checkedBoxes: []
+                }
             }
-        });
+        }
+        else {
+            this.attendance = JSON.parse(localStorage.attendance);
+        }
 
-        localStorage.attendance = JSON.stringify(attendance);
-    }
+    } 
 }
 
 const view = {
     
     init: function() {
-        const attendance = octopus.getAttendance();
         const $allCheckboxes = $('tbody input');
+        const rows = Array.from($('.student'));
+        const attendance = octopus.getAttendance();
+ 
 
-        $.each(attendance, function(index, days) {
-            const studentRow = $('tbody .name-col:contains("' + attendance[index].name + '")').parent('tr');
-            const dayChecks = $(studentRow).children('.attend-col').children('input');
-    
-            dayChecks.each(function(i) {
-                $(this).prop('checked', days.randArr[i]);
+        // Render local storage checkboxes
+        rows.forEach(row => {
+            const name = row.firstElementChild.innerText;
+            const cols = Array.from(row.getElementsByClassName('attend-col'));
+            console.log(name,cols);
+            cols.forEach((col,index) => {
+                col.firstElementChild.checked = attendance[name].checkedBoxes[index];
             });
-        });
+        })
 
         $allCheckboxes.on('click', function() {
-            var studentRows = $('tbody .student'),
-                newAttendance = {};
-    
-            studentRows.each(function() {
-                var name = $(this).children('.name-col').text(),
-                    $allCheckboxes = $(this).children('td').children('input');
-    
-                newAttendance[name] = [];
-    
-                $allCheckboxes.each(function() {
-                    newAttendance[name].push($(this).prop('checked'));
-                });
+            const row = $(this)[0].parentElement.parentElement
+            const name = row.firstElementChild.innerText;
+            const cols = Array.from(row.getElementsByClassName('attend-col'));
+            const newCheckedBoxesArr = [];
+
+            cols.forEach(col => {
+                newCheckedBoxesArr.push(col.firstElementChild.checked);
             });
-    
-            octopus.countMissing();
-            localStorage.attendance = JSON.stringify(newAttendance);
+     
+            if($(this).prop('checked')) {
+                octopus.incrementMissed(name);
+            }
+            else {
+                octopus.decrementMissed(name);
+            } 
+            octopus.addNewArr(name,newCheckedBoxesArr);
+            view.render();
         });
-        octopus.countMissing();
+     
+    },
+
+    render: function() {
+        const rows = Array.from(document.querySelectorAll('.student'));
+        const attendance = octopus.getAttendance();
+
+        rows.forEach(row => {
+            const rowName = row.getElementsByClassName('name-col')[0].innerText;
+            const rowMissed = row.getElementsByClassName('missed-col')[0];
+
+            rowMissed.innerText = attendance[rowName].missed;
+        });
     }
- 
 }
 
 const octopus = {
@@ -76,28 +96,34 @@ const octopus = {
     init: function() {
         model.init();
         view.init();
+        view.render();
     },
 
     getAttendance: function() {
         return model.attendance;
     },
 
-    countMissing: function() {
-        const $allMissed = $('tbody .missed-col')
+    incrementMissed: function(name) {
+        const attendance = octopus.getAttendance();
+        attendance[name].missed++;
+        this.storeAttendance();
+    },
 
-        $allMissed.each(function() {
-            var studentRow = $(this).parent('tr'),
-                dayChecks = $(studentRow).children('td').children('input'),
-                numMissed = 0;
+    decrementMissed: function(name) {
+        const attendance = octopus.getAttendance();
+        attendance[name].missed--;
+        this.storeAttendance();
 
-            dayChecks.each(function() {
-                if (!$(this).prop('checked')) {
-                    numMissed++;
-                }
-            });
+    },
 
-            $(this).text(numMissed);
-        });
+    storeAttendance: function() {
+        localStorage.attendance = JSON.stringify(model.attendance);
+    },
+
+    addNewArr: function(name, newCheckedBoxesArr) {
+        const attendance = octopus.getAttendance();
+        attendance[name].checkedBoxes = newCheckedBoxesArr;
+        this.storeAttendance();
     }
 }
 octopus.init();
